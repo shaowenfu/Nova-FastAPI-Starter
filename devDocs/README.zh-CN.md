@@ -27,7 +27,7 @@
 ## ✨ 核心特性 (Features)
 
 - **LLM Agnostic (模型无关)**: 统一的 `LLMProvider` 接口，一行配置切换 OpenAI, DeepSeek, Claude 或 Local LLM。
-- **Native Memory (原生记忆)**: 提供 `MemoryAdapter` 接口与 `docker-compose.memory.yml`，即插即用的向量库（ChromaDB）支持，默认关闭，按需开启。
+- **Native Memory (原生记忆)**: 基于 **[Mem0](https://github.com/mem0ai/mem0)** 构建，提供即插即用的向量库（ChromaDB）支持，默认关闭，按需开启。
 - **Production Architecture**: 
   - **DDD-Lite**: 清晰的 `Router` -> `Service` -> `Repository` 分层。
   - **Async First**: 全链路异步数据库支持 (Mongo + MySQL + Redis)。
@@ -95,7 +95,7 @@ LLM_MODEL=llama3
 
 ```text
 ├── core/               # 核心配置、异常定义、日志
-│   └── memory_adapter/ # [Unique] 记忆模块适配器 (Connector/Normalizer)
+│   └── memory_adapter/ # [Unique] 基于 Mem0 的适配器 (Connector/Normalizer)
 ├── dependencies/       # FastAPI 依赖注入 (Auth, Permissions)
 ├── infrastructure/     # 基础设施层 (DB Clients, Repositories)
 ├── routers/            # 路由层 (API 接口定义)
@@ -138,6 +138,15 @@ LLM_MODEL=llama3
 - **更新日志 (Progress)**: [English](PROGRESS.md) | [中文](PROGRESS_ZH.md) - 架构变更与重大版本记录。
 
 ---
+
+## 🙏 致谢 (Acknowledgements)
+
+Nova 站在巨人的肩膀上。特别感谢以下开源项目：
+
+- [FastAPI](https://fastapi.tiangolo.com/): 现代、高性能的 Web 框架。
+- [Mem0](https://github.com/mem0ai/mem0): 我们记忆模块的核心基座。
+- [ChromaDB](https://www.trychroma.com/): 强大的向量存储后端。
+- [SQLAlchemy](https://www.sqlalchemy.org/): 稳健的异步 ORM 基础。
 
 ## 📄 License
 

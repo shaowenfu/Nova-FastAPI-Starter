@@ -25,7 +25,7 @@ We are dedicated to providing a **concise, efficient, and production-grade** bac
 ## ✨ Core Features
 
 - **LLM Agnostic**: A unified `LLMProvider` interface allows you to switch between OpenAI, DeepSeek, Claude, or local LLMs with a single configuration line.
-- **Native Memory**: Features a `MemoryAdapter` interface and `docker-compose.memory.yml` for plug-and-play vector database (ChromaDB) support, disabled by default, enabled on demand.
+- **Native Memory**: Built on **[Mem0](https://github.com/mem0ai/mem0)**, providing a plug-and-play adapter and `docker-compose.memory.yml` for vector storage (ChromaDB), disabled by default.
 - **Production Architecture**: 
   - **DDD-Lite**: Clear `Router` -> `Service` -> `Repository` layering.
   - **Async First**: Full-stack asynchronous database support (Mongo + MySQL + Redis).
@@ -93,7 +93,7 @@ LLM_MODEL=llama3
 
 ```text
 ├── core/               # Core configuration, exception definitions, logging
-│   └── memory_adapter/ # [Unique] Memory module adapter (Connector/Normalizer)
+│   └── memory_adapter/ # [Unique] Mem0-based adapter (Connector/Normalizer)
 ├── dependencies/       # FastAPI Dependency Injection (Auth, Permissions)
 ├── infrastructure/     # Infrastructure layer (DB Clients, Repositories)
 ├── routers/            # Routing layer (API interface definitions)
@@ -136,6 +136,15 @@ Please refer to the [Development Regulations](devDocs/develop_regulations.md) fo
 - **Progress Log**: [English](devDocs/PROGRESS.md) | [中文](devDocs/PROGRESS_ZH.md) - Records of architectural changes and major versions.
 
 ---
+
+## 🙏 Acknowledgements
+
+Nova is built on the shoulders of giants. Special thanks to:
+
+- [FastAPI](https://fastapi.tiangolo.com/): For the modern, fast web framework.
+- [Mem0](https://github.com/mem0ai/mem0): The core foundation of our memory adapter.
+- [ChromaDB](https://www.trychroma.com/): For the vector storage backend.
+- [SQLAlchemy](https://www.sqlalchemy.org/): For the async ORM foundation.
 
 ## 📄 License
 
