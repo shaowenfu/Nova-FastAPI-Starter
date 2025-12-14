@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastAPI Starter · 静态资源导航</title>
+  <style>
+    :root {
+      --bg: radial-gradient(circle at 20% 20%, #0f172a 0, #0b1024 40%, #060815 80%);
+      --panel: rgba(255, 255, 255, 0.03);
+      --card: rgba(255, 255, 255, 0.06);
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent: #10b981;
+      --border: rgba(255, 255, 255, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 32px 20px 48px;
+    }
+    .shell { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    header {
+      padding: 20px 24px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--panel);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.28);
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0.2px; }
+    p.lead { margin: 0; color: var(--muted); line-height: 1.6; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .card {
+      padding: 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      text-decoration: none;
+      color: inherit;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(0,0,0,0.25); border-color: rgba(16,185,129,0.35); }
+    .card h3 { margin: 0 0 6px; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+    .card p { margin: 0; color: var(--muted); line-height: 1.6; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(16,185,129,0.12);
+      color: #34d399;
+      font-size: 12px;
+      border: 1px solid rgba(52,211,153,0.35);
+    }
+    .links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+    .small {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px dashed var(--border);
+      background: var(--panel);
+      line-height: 1.5;
+    }
+    @media (max-width: 640px) { body { padding: 24px 16px; } h1 { font-size: 24px; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <h1>FastAPI Starter · 静态资源导航</h1>
+      <p class="lead">面向 AI 初创团队的快速启动包。这里汇总了随框架提供的静态示例页面，方便调试 Auth、WebSocket 以及内部通知展示。</p>
+    </header>
+
+    <section class="grid">
+      <a class="card" href="/static/auth-overview.html">
+        <h3>Auth 快速上手 <span class="pill">JWT + SMS</span></h3>
+        <p>演示短信登录/注册、刷新令牌与登出流程的参考实现，可直接对接控制台短信或自定义 Provider。</p>
+      </a>
+      <a class="card" href="/static/ws_tester.html">
+        <h3>WebSocket 调试台 <span class="pill">通用</span></h3>
+        <p>验证 `/ws` 端点的连接、子协议、ping/status/echo/llm_stream 等 handler 行为，支持携带 JWT。</p>
+      </a>
+      <a class="card" href="/static/backend_notifications.html">
+        <h3>通知中心样板 <span class="pill">运维/研发</span></h3>
+        <p>用来呈现部署、告警、数据同步等后台事件的 UI 模板，可嵌入自建 Console 或 Adminer/Redis Commander。</p>
+      </a>
+    </section>
+
+    <div class="small">
+      · 通过 <code>uvicorn main:app --reload</code> 或 <code>docker compose up --build</code> 启动后，访问 <code>/static/index.html</code><br>
+      · 可根据团队视觉规范调整样式，保持路由/交互契约不变即可直接复用
+    </div>
+  </div>
+</body>
+</html>

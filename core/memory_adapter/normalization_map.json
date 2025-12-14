@@ -1,0 +1,13 @@
+{
+  "replacements": {
+    "AI助手": "陪伴代理A",
+    "老李": "李雷",
+    "昨天那个提醒": "昨天的提醒任务"
+  },
+  "regex_replacements": [
+    {
+      "pattern": "\\s+",
+      "replacement": " "
+    }
+  ]
+}

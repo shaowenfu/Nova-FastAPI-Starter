@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>通知中心样板 · FastAPI Starter</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: rgba(255,255,255,0.03);
+      --card: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.08);
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #3b82f6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 12% 16%, #111827 0, #0b1224 45%, #060815 80%);
+      color: var(--text);
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    header {
+      padding: 28px 22px 10px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 { margin: 0 0 6px; font-size: 28px; }
+    p.lead { margin: 0; color: var(--muted); }
+    .layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 16px;
+      max-width: 1200px;
+      margin: 6px auto 28px;
+      padding: 0 22px 24px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .panel h3 { margin: 0; font-size: 16px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .list { max-height: 520px; overflow-y: auto; }
+    .item {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 120ms ease, border-color 120ms ease;
+    }
+    .item:last-child { border-bottom: none; }
+    .item:hover { background: rgba(255,255,255,0.04); }
+    .item.active { border-left: 3px solid var(--accent); background: rgba(16,185,129,0.08); }
+    .item-title { margin: 0 0 6px; font-weight: 700; }
+    .item-meta { display: flex; gap: 8px; flex-wrap: wrap; color: var(--muted); font-size: 12px; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .tag.info { color: #bfdbfe; border-color: rgba(59,130,246,0.4); }
+    .tag.warn { color: #fed7aa; border-color: rgba(245,158,11,0.4); }
+    .tag.danger { color: #fecdd3; border-color: rgba(239,68,68,0.4); }
+    .content { padding: 18px 20px 24px; }
+    .content h2 { margin: 0 0 8px; font-size: 20px; }
+    .content p { color: var(--muted); margin: 0 0 14px; }
+    .steps { margin: 10px 0 0; padding-left: 18px; color: var(--text); }
+    .steps li { margin: 6px 0; }
+    pre {
+      background: #0b1224;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      color: #d1d5db;
+      overflow-x: auto;
+      font-size: 13px;
+    }
+    .muted { color: var(--muted); font-size: 13px; }
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      .list { max-height: unset; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>后台通知中心样板</h1>
+    <p class="lead">用于展示部署、数据库、WebSocket、LLM 事件等后台播报的通用模板，可嵌入 Console 或独立静态托管。</p>
+    <p class="lead"><a href="/static/index.html" style="color: var(--accent); text-decoration:none;">返回静态资源导航</a></p>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <h3>事件列表</h3>
+      <div class="list" id="eventList">
+        <div class="item active" data-id="deploy">
+          <div class="item-title">新版本部署完成</div>
+          <div class="item-meta">
+            <span class="tag info">deploy</span>
+            <span class="tag">v1.2.0</span>
+            <span class="tag">15:20</span>
+          </div>
+        </div>
+        <div class="item" data-id="db">
+          <div class="item-title">数据库迁移成功</div>
+          <div class="item-meta">
+            <span class="tag info">database</span>
+            <span class="tag">mysql</span>
+            <span class="tag">14:55</span>
+          </div>
+        </div>
+        <div class="item" data-id="ws">
+          <div class="item-title">WebSocket QPS 异常</div>
+          <div class="item-meta">
+            <span class="tag warn">websocket</span>
+            <span class="tag">burst</span>
+            <span class="tag">14:10</span>
+          </div>
+        </div>
+        <div class="item" data-id="llm">
+          <div class="item-title">LLM Provider 切换</div>
+          <div class="item-meta">
+            <span class="tag info">llm</span>
+            <span class="tag">provider</span>
+            <span class="tag">13:40</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="content" id="detail">
+        <h2>新版本部署完成</h2>
+        <p>框架服务已更新至 <code>v1.2.0</code>，包含 WebSocket handler 调优与 Auth 配置抽象。</p>
+        <ul class="steps">
+          <li>版本回滚点：<code>ghcr.io/acme/fastapi-starter:1.1.3</code></li>
+          <li>健康检查：<code>GET /health</code> 全部通过</li>
+          <li>建议动作：刷新前端缓存、验证 <code>/ws/chat</code> 与 <code>/auth/*</code> 基本流</li>
+        </ul>
+        <p class="muted">将事件数据替换为团队自己的发布/告警源（Webhook、日志、队列等）。</p>
+      </div>
+    </section>
+  </main>
+
+  <section class="panel" style="max-width:1200px; margin:0 auto 32px; padding:18px 20px;">
+    <h3 style="margin:0 0 12px;">对接方式</h3>
+    <p class="muted">本页面纯静态，无依赖；可作为前后端解耦的通知视图，或嵌入 Adminer / Redis Commander 类运维页面。</p>
+    <pre># 推送数据方式（示例伪代码）
+fetch('/static/backend_notifications.html'); // 静态托管
+
+// 若需要实时更新，可在 WS 消息中附带 event payload
+// type: status / echo / llm_stream 均可扩展
+{
+  "type": "status",
+  "payload": {
+    "channel": "deploy",
+    "title": "新版本部署完成",
+    "meta": { "version": "1.2.0", "time": "15:20" }
+  }
+}</pre>
+  </section>
+
+  <script>
+    const details = {
+      deploy: {
+        title: "新版本部署完成",
+        desc: "框架服务已更新至 v1.2.0，包含 WebSocket handler 调优与 Auth 配置抽象。",
+        steps: [
+          "版本回滚点：ghcr.io/acme/fastapi-starter:1.1.3",
+          "健康检查：GET /health 全部通过",
+          "建议动作：刷新前端缓存、验证 /ws/chat 与 /auth/* 基本流"
+        ]
+      },
+      db: {
+        title: "数据库迁移成功",
+        desc: "用户与刷新令牌表结构迁移完成，包含索引优化与冗余字段清理。",
+        steps: [
+          "确认备份：S3://backups/fastapi-starter/2024-restore.sql",
+          "验证连接：内部 MySQL + Redis Commander 均正常",
+          "建议动作：运行一次登录/刷新回归用例"
+        ]
+      },
+      ws: {
+        title: "WebSocket QPS 异常",
+        desc: "短时突发流量导致握手峰值升高，建议排查来源并开启限速或队列缓冲。",
+        steps: [
+          "检查 /ws/chat 子协议握手是否携带 JWT",
+          "开启 access 日志采样，观察 type 分布（ping/echo/llm_stream）",
+          "必要时在 WebSocketService 注册节流逻辑"
+        ]
+      },
+      llm: {
+        title: "LLM Provider 切换",
+        desc: "已将默认模型切换到新的 Provider，Mem0 仍保持调用契约。",
+        steps: [
+          "更新环境变量 DEFAULT_MODEL_PROVIDER",
+          "验证 generate_response_stream 行为是否符合预期",
+          "观测 token 用量与错误率，必要时调整超时与重试"
+        ]
+      }
+    };
+
+    const list = document.getElementById("eventList");
+    const detail = document.getElementById("detail");
+
+    list.addEventListener("click", (e) => {
+      const item = e.target.closest(".item");
+      if (!item) return;
+      list.querySelectorAll(".item").forEach(el => el.classList.remove("active"));
+      item.classList.add("active");
+      const data = details[item.dataset.id];
+      renderDetail(data);
+    });
+
+    function renderDetail(data) {
+      if (!data) return;
+      detail.innerHTML = `
+        <h2>${data.title}</h2>
+        <p>${data.desc}</p>
+        <ul class="steps">${data.steps.map(s => `<li>${s}</li>`).join("")}</ul>
+        <p class="muted">将占位内容替换为你们的事件数据源（Webhook、消息队列、日志订阅等）。</p>
+      `;
+    }
+  </script>
+</body>
+</html>

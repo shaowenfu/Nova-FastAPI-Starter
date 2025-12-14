@@ -1,0 +1,57 @@
+name: Deploy to ECS
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+env:
+  # [CONFIG] Change these to match your environment
+  DEPLOY_PATH: "$HOME/workspace/nova-fastapi-starter"
+  ENV_SOURCE: "$HOME/backend_env"
+  PROJECT_NAME: "nova-backend"
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, ecs-backend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check docker compose
+        run: |
+          if ! docker compose version >/dev/null 2>&1; then
+            echo "docker compose not available; install compose plugin and add runner user to docker group"
+            exit 1
+          fi
+
+      - name: Prepare working directory
+        run: |
+          mkdir -p "${{ env.DEPLOY_PATH }}"
+          # Clean old files but keep logs or data if mapped outside
+          # Careful: this deletes everything in DEPLOY_PATH except hidden files?
+          # Safer to just rsync or cp over. specific cleanup if needed.
+          # For starter simplicity, we overwrite.
+          cp -r . "${{ env.DEPLOY_PATH }}"
+
+      - name: Inject production env
+        run: |
+          test -r "${{ env.ENV_SOURCE }}" || { echo "missing or unreadable ${{ env.ENV_SOURCE }}"; exit 1; }
+          cp -f "${{ env.ENV_SOURCE }}" "${{ env.DEPLOY_PATH }}/.env"
+          chmod 600 "${{ env.DEPLOY_PATH }}/.env"
+
+      - name: Compose up
+        run: |
+          cd "${{ env.DEPLOY_PATH }}"
+          docker compose -p "${{ env.PROJECT_NAME }}" up -d --build
+
+      - name: Verify services
+        run: |
+          cd "${{ env.DEPLOY_PATH }}"
+          docker compose -p "${{ env.PROJECT_NAME }}" ps
+          # Wait a bit and check logs
+          sleep 5
+          docker compose -p "${{ env.PROJECT_NAME }}" logs --tail=50 app || true
+
+      - name: Prune dangling images
+        run: |
+          docker image prune -f || true

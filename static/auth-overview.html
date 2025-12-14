@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auth 快速指南 · FastAPI Starter</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --border: #1f2937;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent: #10b981;
+      --code-bg: #0b1224;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px 18px 40px;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 15% 15%, #111827 0, #0b1224 45%, #060815 80%);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    .shell { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+    h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: 0.2px; }
+    p.lead { margin: 0 0 6px; color: var(--muted); }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    }
+    h2 { margin: 0 0 10px; font-size: 18px; }
+    ul { margin: 10px 0 0; padding-left: 18px; color: var(--text); }
+    li { margin: 6px 0; color: var(--text); }
+    code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 6px; }
+    pre {
+      background: var(--code-bg);
+      color: #d1d5db;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      overflow-x: auto;
+      font-size: 14px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(16,185,129,0.12);
+      color: #34d399;
+      border: 1px solid rgba(52,211,153,0.35);
+      font-size: 12px;
+      margin-right: 8px;
+    }
+    @media (max-width: 640px) { h1 { font-size: 24px; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <h1>认证与授权快速指南</h1>
+      <p class="lead">基于 JWT + Redis 的基础鉴权，支持短信 OTP 与密码登录。默认短信 Provider 为控制台输出，生产可按需接入第三方。</p>
+      <p class="lead"><a href="/static/index.html" style="color: var(--accent); text-decoration:none;">返回静态资源导航</a></p>
+    </header>
+
+    <div class="card">
+      <h2>核心约定</h2>
+      <ul>
+        <li><span class="pill">身份</span>用户 UUID 写入 JWT <code>sub</code>；无额外 header/query 传参。</li>
+        <li><span class="pill">令牌</span><code>access</code> 短期、<code>refresh</code> 一次性；刷新记号保存在 Redis <code>auth:rt:{user_id}:{jti}</code>。</li>
+        <li><span class="pill">短信</span>默认 ConsoleSMSProvider，仅打印验证码；替换 <code>SMS_PROVIDER</code> 环境变量即可对接云短信。</li>
+        <li><span class="pill">密码</span>推荐 ≥ 8 位，包含字母+数字+符号；登录失败次数自行在服务侧限流。</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>API 速查</h2>
+      <pre>
+# 发送验证码（login/register/account_delete）
+curl -X POST http://localhost:8000/auth/sms/send \
+  -H "Content-Type: application/json" \
+  -d '{"phone":"13800000000","scene":"login"}'
+
+# 验证 + 登录（短信）
+curl -X POST http://localhost:8000/auth/sms/verify \
+  -H "Content-Type: application/json" \
+  -d '{"phone":"13800000000","code":"123456","scene":"login"}'
+# 返回 token_pair: { access_token, refresh_token }
+
+# 注册：先 verify 获取 verification_ticket，再提交
+curl -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"demo","phone":"13800000000","password":"Passw0rd!","verification_ticket":"..."}'
+
+# 密码登录
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"identifier":"demo","password":"Passw0rd!"}'
+
+# 刷新令牌（一次性）
+curl -X POST http://localhost:8000/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token":"..."}'
+
+# 登出：刷新令牌立即作废
+curl -X POST http://localhost:8000/auth/logout \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token":"..."}'
+      </pre>
+    </div>
+
+    <div class="card">
+      <h2>前端接入示例（fetch）</h2>
+      <pre>const baseURL = 'http://localhost:8000';
+
+// 保存/读取令牌（示例）
+const saveTokens = ({ access_token, refresh_token }) =&gt; localStorage.setItem('tokens', JSON.stringify({ access_token, refresh_token }));
+const getTokens = () =&gt; JSON.parse(localStorage.getItem('tokens') || '{}');
+
+// 封装请求：自动带 access，401 时尝试刷新一次
+async function authedRequest(path, options = {}) {
+  const tokens = getTokens();
+  const headers = { ...(options.headers || {}), Authorization: tokens.access_token ? `Bearer ${tokens.access_token}` : undefined };
+  const res = await fetch(baseURL + path, { ...options, headers });
+  if (res.status !== 401) return res;
+
+  // refresh
+  if (!tokens.refresh_token) throw new Error('no refresh token');
+  const refreshRes = await fetch(baseURL + '/auth/refresh', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: tokens.refresh_token }),
+  });
+  if (!refreshRes.ok) throw new Error('refresh failed');
+  const refreshed = await refreshRes.json();
+  saveTokens(refreshed);
+  return authedRequest(path, options); // retry once
+}
+      </pre>
+    </div>
+
+    <div class="card">
+      <h2>可替换项</h2>
+      <ul>
+        <li>短信：实现自定义 <code>SMSProvider</code> 并在配置中切换。</li>
+        <li>存储：目前 Redis 保存验证码/刷新记号；如需持久化审计，可扩展数据库记录。</li>
+        <li>登录方式：保留密码和短信的基础路由，可按需添加社交/OTP/企业 SSO。</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
